@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feliz Día de la Novia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Petit+Formal+Script&family=Caveat:wght@400;500;600&family=Jost:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wine-dark:#2b1420;
+    --wine:#6b2737;
+    --wine-light:#8a3a4c;
+    --gold:#c9a15a;
+    --gold-soft:#e2c78f;
+    --blush:#e8b4bc;
+    --cream:#f6ebdd;
+    --cream-2:#fbf5ea;
+    --ink:#2a1a1f;
+    --ink-soft:#5a4048;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--wine-dark);
+    color:var(--cream);
+    font-family:'Cormorant Garamond', serif;
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+  }
+  a{color:inherit;}
+
+  /* ---------- Pétalos ambientales ---------- */
+  #petals{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden;}
+  .petal{
+    position:absolute; top:-5%;
+    width:14px; height:14px;
+    background:var(--blush);
+    border-radius:0 60% 0 60%;
+    opacity:.55;
+    animation:fall linear infinite;
+  }
+  @keyframes fall{
+    0%{transform:translateY(0) translateX(0) rotate(0deg);}
+    100%{transform:translateY(110vh) translateX(var(--drift,20px)) rotate(340deg);}
+  }
+
+  /* ---------- Pantalla del sobre ---------- */
+  #envelope-screen{
+    position:relative; z-index:2;
+    min-height:100vh;
+    min-height:100svh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center;
+    padding:2rem 1.25rem;
+    padding-left:max(1.25rem, env(safe-area-inset-left));
+    padding-right:max(1.25rem, env(safe-area-inset-right));
+    padding-top:max(2rem, env(safe-area-inset-top));
+    padding-bottom:max(2rem, env(safe-area-inset-bottom));
+    transition:opacity .6s ease, visibility .6s ease;
+  }
+  #envelope-screen.hidden{opacity:0; visibility:hidden; position:absolute; inset:0;}
+
+  .eyebrow{
+    font-family:'Jost', sans-serif;
+    font-size:.72rem;
+    letter-spacing:.3em;
+    text-transform:uppercase;
+    color:var(--gold-soft);
+    margin:0 0 1.4rem;
+  }
+
+  .envelope-wrap{
+    width:min(320px, 78vw);
+    aspect-ratio:3/2;
+    position:relative;
+    margin:0 auto 1.8rem;
+    cursor:pointer;
+    perspective:1000px;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .envelope-body{
+    position:absolute; inset:0;
+    background:var(--wine);
+    border:1px solid var(--gold);
+    border-radius:6px;
+  }
+  .envelope-body::before, .envelope-body::after{
+    content:"";
+    position:absolute; bottom:0; width:52%; height:100%;
+    border-top:1px solid rgba(201,161,90,.5);
+  }
+  .flap{
+    position:absolute; top:0; left:0; width:100%; height:56%;
+    background:var(--wine-light);
+    clip-path:polygon(0 0, 100% 0, 50% 100%);
+    transform-origin:top;
+    transition:transform .9s cubic-bezier(.4,0,.2,1);
+    border-bottom:1px solid rgba(201,161,90,.4);
+    z-index:3;
+  }
+  .envelope-wrap.open .flap{ transform:rotateX(178deg); }
+  .seal{
+    position:absolute; top:50%; left:50%;
+    width:46px; height:46px;
+    background:var(--gold);
+    border-radius:50%;
+    transform:translate(-50%,-50%);
+    display:flex; align-items:center; justify-content:center;
+    z-index:4;
+    box-shadow:0 2px 6px rgba(0,0,0,.35);
+    transition:transform .4s ease, opacity .4s ease;
+  }
+  .seal svg{width:22px; height:22px; fill:var(--wine-dark);}
+  .envelope-wrap.open .seal{ transform:translate(-50%,-50%) scale(0); opacity:0; }
+  .letter-peek{
+    position:absolute; left:8%; right:8%; bottom:6%;
+    height:70%;
+    background:var(--cream-2);
+    border-radius:3px 3px 0 0;
+    transform:translateY(6%);
+    transition:transform .9s cubic-bezier(.4,0,.2,1) .15s;
+    z-index:2;
+  }
+  .envelope-wrap.open .letter-peek{ transform:translateY(-46%); }
+
+  .open-hint{
+    font-family:'Jost', sans-serif;
+    font-size:.85rem;
+    color:var(--blush);
+    letter-spacing:.04em;
+  }
+
+  /* ---------- Pantalla de la carta ---------- */
+  #letter-screen{
+    position:relative; z-index:2;
+    max-width:640px; margin:0 auto;
+    padding:3rem 1.25rem 5rem;
+    padding-left:max(1.25rem, env(safe-area-inset-left));
+    padding-right:max(1.25rem, env(safe-area-inset-right));
+    padding-bottom:max(5rem, env(safe-area-inset-bottom));
+    opacity:0; transform:translateY(24px);
+    transition:opacity .7s ease, transform .7s ease;
+  }
+  #letter-screen.visible{opacity:1; transform:translateY(0);}
+
+  .date-banner{
+    text-align:center;
+    font-family:'Jost', sans-serif;
+    font-size:.72rem;
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    color:var(--gold-soft);
+    margin-bottom:1.2rem;
+  }
+  .heading{
+    text-align:center;
+    font-weight:500; font-style:italic;
+    font-size:clamp(1.7rem, 6.5vw, 2.5rem);
+    margin:0 0 2.2rem;
+    overflow-wrap:break-word;
+  }
+
+  .paper{
+    background:var(--cream-2);
+    color:var(--ink);
+    border-radius:4px;
+    padding:2.4rem clamp(1.4rem,5vw,2.8rem);
+    box-shadow:0 18px 40px rgba(0,0,0,.35);
+    position:relative;
+  }
+  .paper::before{
+    content:"";
+    position:absolute; left:0; top:0; bottom:0; width:4px;
+    background:linear-gradient(var(--gold), var(--blush));
+    border-radius:4px 0 0 4px;
+  }
+  .salute{
+    font-family:'Caveat', cursive;
+    font-weight:600;
+    font-size:clamp(1.5rem, 5vw, 1.9rem); margin:0 0 .6rem; color:var(--wine);
+  }
+  #letter-body{
+    font-family:'Caveat', cursive;
+    font-weight:500;
+    font-size:clamp(1.2rem, 4.6vw, 1.55rem); line-height:1.65;
+    letter-spacing:.01em;
+    color:var(--ink);
+    white-space:pre-wrap;
+    outline:none;
+    word-break:break-word;
+  }
+  #letter-body:focus{ background:rgba(201,161,90,.08); }
+  .signature{
+    margin-top:1.4rem;
+    text-align:right;
+    font-family:'Petit Formal Script', cursive;
+    font-size:clamp(1.5rem, 5vw, 1.9rem);
+    color:var(--wine);
+  }
+  /* ---------- Sección canción ---------- */
+  .section-label{
+    font-family:'Jost', sans-serif;
+    font-size:.72rem;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    color:var(--gold-soft);
+    margin:3rem 0 .8rem;
+    text-align:center;
+  }
+
+  .song-card{
+    max-width:420px; margin:0 auto;
+    background:var(--wine); border:1px solid var(--gold);
+    border-radius:8px; padding:1.1rem;
+    display:flex; align-items:center; gap:.85rem;
+  }
+  .vinyl{
+    width:clamp(48px, 15vw, 64px); height:clamp(48px, 15vw, 64px); border-radius:50%;
+    background:repeating-radial-gradient(circle at center, var(--ink) 0 2px, #3a2530 2px 5px);
+    border:2px solid var(--gold);
+    position:relative; flex:none;
+  }
+  .vinyl::after{
+    content:""; position:absolute; top:50%; left:50%;
+    width:16px; height:16px; border-radius:50%;
+    background:var(--gold);
+    transform:translate(-50%,-50%);
+  }
+  .vinyl.spin{ animation:spin 3s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .song-meta{ flex:1; min-width:0; }
+  .song-title{ font-style:italic; font-size:clamp(.95rem, 3.6vw, 1.1rem); margin:0; overflow-wrap:break-word; }
+  .song-artist{ font-family:'Jost', sans-serif; font-size:.78rem; color:var(--blush); margin:.15rem 0 0; overflow-wrap:break-word; }
+  .song-progress{
+    margin-top:.5rem; height:3px; border-radius:2px;
+    background:rgba(246,235,221,.2); overflow:hidden;
+  }
+  .song-progress-fill{
+    height:100%; width:0%; background:var(--gold);
+    transition:width .2s linear;
+  }
+  .song-btn{
+    flex:none; width:44px; height:44px; border-radius:50%;
+    background:var(--gold); border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .2s ease;
+    touch-action:manipulation;
+  }
+  .song-btn:hover{ transform:scale(1.06); }
+  .song-btn svg{ width:16px; height:16px; fill:var(--wine-dark); }
+
+  /* ---------- Sección imagen/recuerdo ---------- */
+  .photo-frame{
+    max-width:420px; margin:0 auto;
+    background:var(--wine); border:1px solid var(--gold);
+    border-radius:8px; padding:.7rem;
+  }
+  .photo-frame .photo-inner{
+    background:var(--wine-dark);
+    border-radius:4px;
+    overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    min-height:160px;
+  }
+  .photo-frame img{
+    width:100%; display:block;
+    max-height:520px; object-fit:cover;
+  }
+  .photo-placeholder{
+    font-family:'Jost', sans-serif;
+    font-size:.82rem;
+    color:var(--blush);
+    text-align:center;
+    padding:1.4rem;
+    line-height:1.5;
+  }
+
+  footer.heart-footer{
+    text-align:center; margin-top:3rem;
+    color:var(--blush); font-size:1.4rem;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .petal, .vinyl.spin{ animation:none !important; }
+    .flap, .letter-peek, .seal, #letter-screen{ transition:none !important; }
+  }
+
+  /* Pantallas muy angostas (móviles pequeños) */
+  @media (max-width: 360px){
+    .paper{ padding:1.8rem 1.1rem; }
+    .song-card{ padding:.9rem; gap:.65rem; }
+    .section-label{ margin:2.2rem 0 .7rem; }
+    .eyebrow{ letter-spacing:.2em; }
+  }
+
+  /* Móviles/tablets en horizontal: evita que el sobre domine la pantalla */
+  @media (max-height: 480px) and (orientation: landscape){
+    #envelope-screen{ padding-top:1.2rem; padding-bottom:1.2rem; }
+    .envelope-wrap{ width:min(220px, 46vh); margin-bottom:1rem; }
+    .eyebrow{ margin-bottom:.8rem; }
+  }
+
+  /* Pantallas grandes: centra el contenido y evita que se vea perdido */
+  @media (min-width: 900px){
+    #letter-screen{ padding-top:4rem; }
+    .paper{ padding:3rem 3.4rem; }
+  }
+
+  :focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+</style>
+</head>
+<body>
+
+<div id="petals"></div>
+
+<section id="envelope-screen">
+  <p class="eyebrow">1 de agosto · Día de la Novia</p>
+
+  <p class="section-label" style="margin-top:0;">una canción para ti</p>
+  <div class="song-card">
+    <div class="vinyl" id="vinyl"></div>
+    <div class="song-meta">
+      <p class="song-title" id="songTitle">Elige una canción</p>
+      <p class="song-artist" id="songArtist">añádela en «personalizar»</p>
+      <div class="song-progress"><div class="song-progress-fill" id="songProgressFill"></div></div>
+    </div>
+    <button class="song-btn" id="songBtn" aria-label="Reproducir canción">
+      <svg viewBox="0 0 24 24" id="songIcon"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+  </div>
+  <audio id="songAudio" preload="none"></audio>
+
+  <div class="envelope-wrap" id="envelopeWrap" role="button" tabindex="0" aria-label="Abrir el sobre" style="margin-top:2.2rem;">
+    <div class="envelope-body"></div>
+    <div class="letter-peek"></div>
+    <div class="flap"></div>
+    <div class="seal">
+      <svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-10-9.3C.6 8.4 2.3 5 5.7 5c2 0 3.4 1 4.3 2.3C11 6 12.4 5 14.4 5 17.8 5 19.4 8.4 22 11.7 19.5 16.4 12 21 12 21z"/></svg>
+    </div>
+  </div>
+  <p class="open-hint">toca el sobre para abrirlo</p>
+</section>
+
+<section id="letter-screen">
+  <p class="date-banner" id="dateBanner">1 de agosto · Día de la Novia</p>
+  <h1 class="heading" id="mainHeading">Feliz día, <span id="headingName">amor mío</span></h1>
+
+  <div class="paper">
+    <p class="salute" id="letterSalute">Para ti,</p>
+    <div id="letter-body"></div>
+    <p class="signature" id="letterSignature">— tu persona favorita</p>
+  </div>
+
+  <p class="section-label">un recuerdo nuestro</p>
+  <div class="photo-frame">
+    <div class="photo-inner" id="photoInner">
+      <p class="photo-placeholder">aún no hay imagen<br>añádela en CONFIG.imagen</p>
+    </div>
+  </div>
+
+  <footer class="heart-footer">♡</footer>
+</section>
+
+<script>
+  /* ======================================================
+     EDITA AQUÍ. Todo lo de la carta, la canción y la imagen
+     va en este objeto: cambia el texto directamente en el código.
+     ====================================================== */
+  const CONFIG = {
+    nombreDestinataria: "amor mío",
+    nombreRemitente: "tu persona favorita",
+    carta:
+` Mi princesa hermosa, tengo tantas cosas que quiero decirte que a veces siento que las palabras no me alcanzan porque cuando se trata de usted siempre me quedo corto. Pero quiero empezar por lo más importante. Gracias. Gracias por quedarse a mi lado incluso cuando no soy perfecto. Cuando me equivoco, cuando siento que no estoy en mi mejor versión. Gracias por no soltarme nunca, por elegir compartir su vida conmigo y por hacerme sentir el hombre más afortunado del mundo.<br><br> Gracias por cada sonrisa que me regalas, incluso en mis días grises. Gracias por hacerme sentir que no importa lo que pase, mientras estés conmigo, todo vale la pena. Usted es esa persona que siempre soñé tener, la que pedí en silencio sin saber si algún día iba a llegar. Y hoy tengo la suerte de tener a mi lado.<br><br> Me hace tan feliz, mi amor. Cada mirada, cada beso, cada abrazo suyo, me hace sentir que estoy exactamente donde tengo que estar. Usted es mi refugio, mi paz, mi alegría, mi motivo para levantarme todos los días con ganas de ser mejor. No tiene ni idea del orgulloso que estoy de usted, de todo lo que es y de todo lo que está logrando. <br><br> Llegó a mi vida de pronto, sin avisar, y en un abrir y cerrar de ojos, cambió todo para bien. Le agradezco por cada momento vivido, cada sonrisa, cada merienda, cada mañana, cada noche. Todo lo guardo en lo más profundo de mi corazón.<br><br> Gracias por siempre sacarme una sonrisa, por demostrarme su amor de una manera tan linda. Sé que somos jóvenes  y nadie sabe lo que puede pasar, pero hay algo de lo que estoy completamente seguro. Quiero pasar mi vida a tu lado, quiero verla cumplir cada una de sus metas, acompañarlos en cada paso, y que usted esté ahí para ver cómo cumplo mis sueños. Porque no me imagino un futuro donde no esté usted.<br><br> Usted es la mujer que quiero, la que siempre anhelé tener, la compañera que siempre quise a mi lado, y de verdad siento que esto es para siempre. Quiero que sepa lo muchísimo que la amo, que daría una y mil vidas por usted, si fueran necesarias. Porque usted es la persona que ilumina mis días, mis mañanas, mis noches, es mi sostén, mi felicidad, mi todo. Gracias por aparecer en mi vida, mi princesita hermosa. La amo con todo mi corazón. `,
+    cancion: {
+      titulo: "Contigo",
+      artista: "Los Panchos",
+      /* Pon aquí el nombre de tu archivo mp3. Debe estar en la misma
+         carpeta que este archivo HTML (o una ruta relativa a él). */
+      archivo: "cancio.mp3"
+    },
+    /* Pon aquí el nombre de tu imagen (foto de recuerdo). Debe estar
+       en la misma carpeta que este archivo HTML (o una ruta relativa). */
+    imagen: "imagen.jpg"
+  };
+
+  const letterBody = document.getElementById('letter-body');
+  const headingName = document.getElementById('headingName');
+  const letterSignature = document.getElementById('letterSignature');
+  const songTitle = document.getElementById('songTitle');
+  const songArtist = document.getElementById('songArtist');
+  const songAudio = document.getElementById('songAudio');
+  const songProgressFill = document.getElementById('songProgressFill');
+  const songBtn = document.getElementById('songBtn');
+  const songIcon = document.getElementById('songIcon');
+  const vinyl = document.getElementById('vinyl');
+  const photoInner = document.getElementById('photoInner');
+
+  const PLAY_ICON = '<path d="M8 5v14l11-7z"/>';
+  const PAUSE_ICON = '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>';
+
+  headingName.textContent = CONFIG.nombreDestinataria;
+  letterBody.innerHTML = CONFIG.carta;
+  letterSignature.textContent = "— " + CONFIG.nombreRemitente;
+  songTitle.textContent = CONFIG.cancion.titulo;
+  songArtist.textContent = CONFIG.cancion.artista;
+  songAudio.src = CONFIG.cancion.archivo;
+
+  if(CONFIG.imagen){
+    const img = document.createElement('img');
+    img.src = CONFIG.imagen;
+    img.alt = 'Un recuerdo nuestro';
+    img.onerror = () => {
+      photoInner.innerHTML = '<p class="photo-placeholder">no se encontró la imagen<br>revisa el nombre en CONFIG.imagen</p>';
+    };
+    img.onload = () => {
+      photoInner.innerHTML = '';
+      photoInner.appendChild(img);
+    };
+  }
+
+  songBtn.addEventListener('click', () => {
+    if(songAudio.paused){
+      songAudio.play().catch(() => {
+        songTitle.textContent = "No se encontró el archivo mp3";
+        songArtist.textContent = "revisa el nombre en CONFIG.cancion.archivo";
+      });
+    } else {
+      songAudio.pause();
+    }
+  });
+  songAudio.addEventListener('play', () => {
+    vinyl.classList.add('spin');
+    songIcon.innerHTML = PAUSE_ICON;
+  });
+  songAudio.addEventListener('pause', () => {
+    vinyl.classList.remove('spin');
+    songIcon.innerHTML = PLAY_ICON;
+  });
+  songAudio.addEventListener('ended', () => {
+    vinyl.classList.remove('spin');
+    songIcon.innerHTML = PLAY_ICON;
+    songProgressFill.style.width = '0%';
+  });
+  songAudio.addEventListener('timeupdate', () => {
+    if(songAudio.duration){
+      songProgressFill.style.width = (songAudio.currentTime / songAudio.duration * 100) + '%';
+    }
+  });
+
+  const envelopeWrap = document.getElementById('envelopeWrap');
+  const envelopeScreen = document.getElementById('envelope-screen');
+  const letterScreen = document.getElementById('letter-screen');
+
+  function openEnvelope(){
+    if(envelopeWrap.classList.contains('open')) return;
+    envelopeWrap.classList.add('open');
+    setTimeout(() => {
+      envelopeScreen.classList.add('hidden');
+      letterScreen.classList.add('visible');
+      window.scrollTo({top:0, behavior:'smooth'});
+    }, 850);
+  }
+  envelopeWrap.addEventListener('click', openEnvelope);
+  envelopeWrap.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openEnvelope(); }
+  });
+
+  const petalsHost = document.getElementById('petals');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!reduceMotion){
+    const total = window.innerWidth < 600 ? 10 : 18;
+    for(let i=0; i<total; i++){
+      const p = document.createElement('div');
+      p.className = 'petal';
+      p.style.left = Math.random()*100 + 'vw';
+      p.style.setProperty('--drift', (Math.random()*80-40) + 'px');
+      p.style.animationDuration = (9 + Math.random()*8) + 's';
+      p.style.animationDelay = (Math.random()*10) + 's';
+      p.style.opacity = 0.3 + Math.random()*0.4;
+      const scale = 0.6 + Math.random()*0.8;
+      p.style.transform = `scale(${scale})`;
+      petalsHost.appendChild(p);
+    }
+  }
+</script>
+</body>
+</html>
